@@ -287,7 +287,7 @@ public class AndroidUtils {
         PowerManager powerManager = (PowerManager) c.getSystemService(POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag);
 
-        wakeLock.acquire();
+          wakeLock.acquire();
 
         return wakeLock;
 

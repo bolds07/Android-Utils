@@ -5,12 +5,15 @@ import android.app.ActivityManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.Signature;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
 import android.os.PowerManager;
+import android.os.Process;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -287,7 +290,7 @@ public class AndroidUtils {
         PowerManager powerManager = (PowerManager) c.getSystemService(POWER_SERVICE);
         PowerManager.WakeLock wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, tag);
 
-          wakeLock.acquire();
+        wakeLock.acquire();
 
         return wakeLock;
 
@@ -296,13 +299,27 @@ public class AndroidUtils {
 
     public static boolean isBeingCloned(@NonNull Context c) {
         ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
-        int myPid = android.os.Process.myPid();
-        int myUid = android.os.Process.myUid();
+        int myPid = Process.myPid();
+        int myUid = Process.myUid();
         //noinspection ConstantConditions
         List<ActivityManager.RunningAppProcessInfo> processess = am.getRunningAppProcesses();
 
+
         if (processess == null)
             return true;
+
+        String path = c.getFilesDir().getAbsolutePath().toLowerCase();
+        String[] forbiddenPaths = {"felix.jyelves", "multi", "duel", "paralelo", "whatswebnolastseen", "mobiorca.whatsaccount", "duplicator", "trendmicro.tmas", "ludashi.superboost", "jumobile.smartapp", "hide", "paralel", "parallel", "dual", "clone"};
+        for (String forbid : forbiddenPaths)
+            if (path.contains(forbid))
+                return true;
+
+        try {
+            ApplicationInfo appinfo = c.getPackageManager().getApplicationInfo(c.getApplicationContext().getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !appinfo.dataDir.replace("user_de", "user").equals(appinfo.deviceProtectedDataDir.replace("user_de", "user")))
+                return true;
+        } catch (PackageManager.NameNotFoundException ignore) {
+        }
 
         for (ActivityManager.RunningAppProcessInfo info : processess)
             if (info.uid == myUid && info.pid != myPid)
@@ -419,6 +436,32 @@ public class AndroidUtils {
             cursor.close();
 
         return body;
+    }
+
+
+    @SuppressLint("PackageManagerGetSignatures")
+    public static long getCertificateValue(Context ctx) {
+        try {
+            Signature[] signatures = null;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                try {
+                    signatures = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), PackageManager.GET_SIGNING_CERTIFICATES).signingInfo.getApkContentsSigners();
+                } catch (Throwable ignored) {
+                }
+            }
+            if (signatures == null) {
+                signatures = ctx.getPackageManager().getPackageInfo(ctx.getPackageName(), PackageManager.GET_SIGNATURES).signatures;
+            }
+            long value = 1;
+
+            for (Signature signature : signatures) {
+                value *= signature.hashCode();
+            }
+            return value;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return 0;
     }
 
 

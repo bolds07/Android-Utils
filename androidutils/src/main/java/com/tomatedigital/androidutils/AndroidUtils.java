@@ -2,6 +2,8 @@ package com.tomatedigital.androidutils;
 
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -15,6 +17,7 @@ import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Process;
 
+import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -266,6 +269,13 @@ public class AndroidUtils {
         COUNTRY_CODES.put("ZW", "263");
     }
 
+    @MainThread
+    public static void copyToClipboard(@NonNull final Context c, @NonNull final String text, @NonNull final String label) {
+        ClipboardManager clipboard = (ClipboardManager) c.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clip = ClipData.newPlainText(label, text);
+        //noinspection ConstantConditions
+        clipboard.setPrimaryClip(clip);
+    }
 
     public static boolean canTouch(@Nullable final OkHttpClient client, @NonNull final String url) {
 

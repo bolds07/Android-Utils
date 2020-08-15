@@ -11,6 +11,8 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Looper;
@@ -21,9 +23,14 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -40,6 +47,8 @@ public class AndroidUtils {
 
 
     protected static final Map<String, String> COUNTRY_CODES = new HashMap<>();
+    private static final Set<String> PIRAT_APPS = new HashSet<>(Arrays.asList("com.chelpus.lackypatch", "com.dimonvideo.luckypatcher", "com.forpda.lp", "com.android.vending.billing.InAppBillingService", "com.android.vending.billing.InAppBillingSorvice", "com.android.vendinc", "uret.jasi2169.patcher", "zone.jasi2169.uretpatcher", "p.jasi2169.al3", "cc.madkite.freedom", "cc.cz.madkite.freedom", "org.creeplays.hack", "com.happymod.apk", "org.sbtools.gamehack", "com.zune.gamekiller", "com.aag.killer", "com.killerapp.gamekiller", "cn.lm.sq", "net.schwarzis.game_cih", "com.baseappfull.fwd", "com.github.oneminusone.disablecontentguard", "com.oneminusone.disablecontentguard"));
+
 
     static {
         COUNTRY_CODES.put("AF", "93");
@@ -269,6 +278,21 @@ public class AndroidUtils {
         COUNTRY_CODES.put("ZW", "263");
     }
 
+    public static String piratAppInstalled(@NonNull final Context c) {
+        PackageManager pm = c.getPackageManager();
+        for (ApplicationInfo ai : pm.getInstalledApplications(PackageManager.GET_META_DATA))
+            if (PIRAT_APPS.contains(ai.packageName))
+                return ai.packageName;
+        for (String p : PIRAT_APPS) {
+            Intent i = pm.getLaunchIntentForPackage(p);
+            if (i != null && !pm.queryIntentActivities(i, PackageManager.MATCH_DEFAULT_ONLY).isEmpty())
+                return p;
+        }
+
+
+        return null;
+    }
+
     @MainThread
     public static void copyToClipboard(@NonNull final Context c, @NonNull final String text, @NonNull final String label) {
         ClipboardManager clipboard = (ClipboardManager) c.getSystemService(Context.CLIPBOARD_SERVICE);
@@ -375,27 +399,91 @@ public class AndroidUtils {
     }
 
     @SuppressLint("HardwareIds")
-    public static boolean isEmulator() {
-        return !BuildConfig.DEBUG &&
-                (Build.FINGERPRINT.startsWith("generic")
-                        || Build.MODEL.contains("google_sdk")
-                        || Build.MODEL.toLowerCase().contains("droid4x")
-                        || Build.MODEL.contains("Emulator")
-                        || Build.MODEL.contains("Android SDK built for x86")
-                        || Build.MANUFACTURER.contains("Genymotion")
-                        || Build.HARDWARE.equals("goldfish")
-                        || Build.HARDWARE.equals("vbox86")
-                        || Build.PRODUCT.equals("sdk")
-                        || Build.PRODUCT.equals("google_sdk")
-                        || Build.PRODUCT.equals("sdk_x86")
-                        || Build.PRODUCT.equals("vbox86p")
+    public static boolean isEmulator(@NonNull final Context c) {
+
+        Field[] tmp = Sensor.class.getDeclaredFields();
+        Set<Field> fields = new HashSet<>();
+        for (Field f : tmp)
+            if (!Modifier.isStatic(f.getModifiers()) && f.getType() == String.class) {
+                f.setAccessible(true);
+                fields.add(f);
+            }
+
+        for (Sensor s : ((SensorManager) c.getSystemService(Context.SENSOR_SERVICE)).getSensorList(Sensor.TYPE_ALL)) {
+            for (Field f : fields) {
+                try {
+                    String vendor = (String) f.get(s);
+                    if (vendor != null) {
+                        vendor = vendor.toLowerCase();
+                        if (vendor.contains("bluestacks") || vendor.contains("tiantianvm") || vendor.contains("genymotion") || vendor.contains("goldfish") || vendor.contains("ttvm_hdragon") || vendor.contains("vbox"))
+                            return true;
+                    }
+                } catch (IllegalAccessException ignore) {
+
+                }
+            }
+        }
+
+
+        final String manufacturer = Build.MANUFACTURER.toLowerCase();
+        final String model = Build.MODEL.toLowerCase();
+        final String hardware = Build.HARDWARE.toLowerCase();
+        final String product = Build.PRODUCT.toLowerCase();
+        final String brand = Build.BRAND.toLowerCase();
+        final String fingerprint = Build.FINGERPRINT.toLowerCase();
+        return
+                model.contains("google_sdk")
+                        || model.contains("droid4x")
+                        || model.contains("emulator")
+                        || model.contains("android sdk built for x86")
+                        || model.equals("sdk")
+                        || model.contains("tiantianvm")
+                        || model.contains("andy")
+                        || model.contains(" android sdk built for x86_64")
+                        || manufacturer.contains("unknown")
+                        || manufacturer.contains("genymotion")
+                        || manufacturer.contains("andy")
+                        || manufacturer.contains("mit")
+                        || manufacturer.contains("tiantianvm")
+                        || hardware.contains("goldfish")
+                        || hardware.contains("vbox86")
+                        || hardware.contains("nox")
+                        || hardware.contains("ttvm_x86")
+                        || product.contains("sdk")
+                        || product.contains("andy")
+                        || product.contains("ttvm_hdragon")
+                        || product.contains("droid4x")
+                        || product.contains("nox")
+                        || product.contains("vbox86p")
+
                         || Build.BOARD.toLowerCase().contains("nox")
                         || Build.BOOTLOADER.toLowerCase().contains("nox")
-                        || Build.HARDWARE.toLowerCase().contains("nox")
-                        || Build.PRODUCT.toLowerCase().contains("nox")
+
+
                         || Build.SERIAL.toLowerCase().contains("nox")
-                        || (Build.BRAND.startsWith("generic") && Build.DEVICE.startsWith("generic"))
-                        || Build.FINGERPRINT.startsWith("unknown"));
+                        || brand.contains("unknown")
+                        || brand.contains("genymotion")
+                        || brand.contains("andy")
+                        || brand.contains("nox")
+                        || brand.contains("mit")
+                        || brand.contains("tiantianvm")
+                        || Build.FINGERPRINT.startsWith("unknown")
+                        || fingerprint.contains("generic")
+                        || fingerprint.contains("andy")
+                        || fingerprint.contains("ttvm_hdragon")
+                        || fingerprint.contains("vbox86p");
+    }
+
+    public static boolean isInstalledFromGooglePlay(@NonNull final Context context) {
+        // A list with valid installers package name
+        Set<String> validInstallers = new HashSet<>(Arrays.asList("com.amazon.venezia", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.android.vending", "com.google.android.feedback"));
+
+        // The package name of the app that has installed your app
+        final String installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
+
+
+        // true if your app has been downloaded from Play Store
+        return installer != null && validInstallers.contains(installer);
     }
 
     public static boolean isMainThread() {

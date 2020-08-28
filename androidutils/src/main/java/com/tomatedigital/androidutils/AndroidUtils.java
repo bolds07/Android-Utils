@@ -15,6 +15,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Process;
@@ -22,6 +23,8 @@ import android.os.Process;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.google.firebase.analytics.FirebaseAnalytics;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
@@ -47,7 +50,7 @@ public class AndroidUtils {
 
 
     protected static final Map<String, String> COUNTRY_CODES = new HashMap<>();
-    private static final Set<String> PIRAT_APPS = new HashSet<>(Arrays.asList("com.chelpus.lackypatch", "com.dimonvideo.luckypatcher", "com.forpda.lp", "com.android.vending.billing.InAppBillingService", "com.android.vending.billing.InAppBillingSorvice", "com.android.vendinc", "uret.jasi2169.patcher", "zone.jasi2169.uretpatcher", "p.jasi2169.al3", "cc.madkite.freedom", "cc.cz.madkite.freedom", "org.creeplays.hack", "com.happymod.apk", "org.sbtools.gamehack", "com.zune.gamekiller", "com.aag.killer", "com.killerapp.gamekiller", "cn.lm.sq", "net.schwarzis.game_cih", "com.baseappfull.fwd", "com.github.oneminusone.disablecontentguard", "com.oneminusone.disablecontentguard"));
+    private static final Set<String> PIRAT_APPS = new HashSet<>(Arrays.asList("com.chelpus.lackypatch", "com.dimonvideo.luckypatcher", "com.forpda.lp", "com.android.vending.billing.InAppBillingService", "com.android.vending.billing.InAppBillingSorvice", "com.android.vendinc", "uret.jasi2169.patcher", "zone.jasi2169.uretpatcher", "p.jasi2169.al3", "cc.madkite.freedom", "cc.cz.madkite.freedom", "org.creeplays.hack", /*"com.happymod.apk",*/ "org.sbtools.gamehack", "com.zune.gamekiller", "com.aag.killer", "com.killerapp.gamekiller", "cn.lm.sq", "net.schwarzis.game_cih", "com.baseappfull.fwd", "com.github.oneminusone.disablecontentguard", "com.oneminusone.disablecontentguard"));
 
 
     static {
@@ -278,7 +281,7 @@ public class AndroidUtils {
         COUNTRY_CODES.put("ZW", "263");
     }
 
-    public static String piratAppInstalled(@NonNull final Context c) {
+    private static String piratAppInstalled(@NonNull final Context c) {
         PackageManager pm = c.getPackageManager();
         for (ApplicationInfo ai : pm.getInstalledApplications(PackageManager.GET_META_DATA))
             if (PIRAT_APPS.contains(ai.packageName))
@@ -291,6 +294,34 @@ public class AndroidUtils {
 
 
         return null;
+    }
+
+    public static boolean hasPiratAppInstalled(@NonNull final Context c) {
+        String pirat = piratAppInstalled(c);
+        if (pirat != null) {
+            Bundle b = new Bundle();
+            b.putString("app", pirat);
+            FirebaseAnalytics.getInstance(c).logEvent("pirat_app_installed", b);
+        }
+
+
+        return pirat != null;
+    }
+
+
+    public static boolean isAppOnForeground(@NonNull final Context context) {
+        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+        if (appProcesses == null)
+            return false;
+
+        final String packageName = context.getPackageName();
+        for (ActivityManager.RunningAppProcessInfo appProcess : appProcesses)
+            if (appProcess.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND && appProcess.processName.equals(packageName))
+                return true;
+
+
+        return false;
     }
 
     @MainThread
@@ -474,16 +505,22 @@ public class AndroidUtils {
                         || fingerprint.contains("vbox86p");
     }
 
-    public static boolean isInstalledFromGooglePlay(@NonNull final Context context) {
+    public static boolean isOfficialInstaller(@NonNull final Context context) {
         // A list with valid installers package name
         Set<String> validInstallers = new HashSet<>(Arrays.asList("com.amazon.venezia", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.android.vending", "com.google.android.feedback"));
 
         // The package name of the app that has installed your app
         final String installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
 
+        if (!validInstallers.contains(installer) && !BuildConfig.DEBUG) {
+            Bundle b = new Bundle();
+            b.putString("installer", installer == null ? "null" : installer);
+            FirebaseAnalytics.getInstance(context).logEvent("pirat_install", b);
+        }
+
 
         // true if your app has been downloaded from Play Store
-        return installer != null && validInstallers.contains(installer);
+        return validInstallers.contains(installer);
     }
 
     public static boolean isMainThread() {

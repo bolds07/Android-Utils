@@ -29,14 +29,13 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 
 import static android.content.Context.POWER_SERVICE;
 
@@ -56,6 +55,7 @@ public class AndroidUtils {
         return email != null && !email.contains("not-applicable") && !email.contains("blackhole-") && !email.trim().equals("") && !email.contains("@devnull") && email.trim().toLowerCase().matches(REGEX_EMAIL);
 
     }
+
     private static String piratAppInstalled(@NonNull final Context c) {
         PackageManager pm = c.getPackageManager();
         for (ApplicationInfo ai : pm.getInstalledApplications(PackageManager.GET_META_DATA))
@@ -114,7 +114,11 @@ public class AndroidUtils {
 
         if (okHttpClient != null) {
             try {
-                okHttpClient.newCall(new Request.Builder().get().url(url).build()).execute();
+                Response resp = okHttpClient.newCall(new Request.Builder().get().url(url).build()).execute();
+
+                if (resp.body() != null)
+                    resp.close();
+
                 return true;
             } catch (Exception e) {
                 return false;

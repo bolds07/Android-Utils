@@ -212,6 +212,8 @@ public class AndroidUtils {
     @SuppressLint("HardwareIds")
     public static boolean isEmulator(@NonNull final Context c) {
 
+        
+
         Field[] tmp = Sensor.class.getDeclaredFields();
         Set<Field> fields = new HashSet<>();
         for (Field f : tmp)

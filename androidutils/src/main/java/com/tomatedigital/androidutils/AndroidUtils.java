@@ -1,5 +1,7 @@
 package com.tomatedigital.androidutils;
 
+import android.accounts.Account;
+import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
 import android.content.ClipData;
@@ -13,7 +15,10 @@ import android.content.pm.Signature;
 import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
@@ -23,20 +28,27 @@ import android.os.Process;
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.google.firebase.analytics.FirebaseAnalytics;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.net.URL;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import javax.net.ssl.HttpsURLConnection;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static android.content.Context.ACCOUNT_SERVICE;
 import static android.content.Context.POWER_SERVICE;
 
 public class AndroidUtils {
@@ -212,7 +224,6 @@ public class AndroidUtils {
     @SuppressLint("HardwareIds")
     public static boolean isEmulator(@NonNull final Context c) {
 
-        
 
         Field[] tmp = Sensor.class.getDeclaredFields();
         Set<Field> fields = new HashSet<>();
@@ -381,5 +392,59 @@ public class AndroidUtils {
         return 0;
     }
 
+
+    @WorkerThread
+    public static String getIpAddress() throws IOException {
+        StringBuilder ip = new StringBuilder();
+
+        HttpsURLConnection conn = (HttpsURLConnection) new URL("https://api64.ipify.org").openConnection();
+        conn.getResponseCode();
+        byte[] buffer = new byte[256];
+        int lenght;
+        while ((lenght = conn.getInputStream().read(buffer)) > 0)
+            ip.append(new String(buffer, 0, lenght));
+
+        return ip.toString();
+    }
+
+    @SuppressLint("WifiManagerPotentialLeak")
+    @WorkerThread
+    public static boolean isGoogleUsing(@NonNull final Context c) {
+
+
+        for (Account acc : ((AccountManager) c.getSystemService(ACCOUNT_SERVICE)).getAccounts()) {
+            if (acc.name.toLowerCase().endsWith("@cloudtestlabaccounts.com"))
+                return true;
+        }
+
+        if (((WifiManager) c.getSystemService(Context.WIFI_SERVICE)).getConnectionInfo().getSSID().startsWith("\"wl-ftl-mt"))
+            return true;
+
+        try {
+            String ip = getIpAddress();
+            if (ip.startsWith("108.177.1.") || ip.startsWith("108.177.2.") || ip.startsWith("108.177.3.") || ip.startsWith("108.177.4.") || ip.startsWith("108.177.5.") || ip.startsWith("108.177.6.") || ip.startsWith("108.177.7.") || ip.startsWith("108.177.8.") || ip.startsWith("108.177.9.") || ip.startsWith("108.177.10."))
+                return true;
+        } catch (IOException ignore) {
+        }
+
+        //google always connects to wifi
+        ConnectivityManager connection = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        int i = 0;
+        for (NetworkInfo net : connection.getAllNetworkInfo()) {
+            if (net.getState() == NetworkInfo.State.CONNECTED && net.getType() != ConnectivityManager.TYPE_WIFI)
+                return false;
+        }
+
+
+        return false;
+    }
+
+    private static String intToIp(int i) {
+
+        return ((i >> 24) & 0xFF) + "." +
+                ((i >> 16) & 0xFF) + "." +
+                ((i >> 8) & 0xFF) + "." +
+                (i & 0xFF);
+    }
 
 }

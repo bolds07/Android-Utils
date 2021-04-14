@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="close" >Cerrar</string>
+    <string name="browser_not_found_message">Su teléfono no tiene ningún navegador capaz de mostrar esta página.\nInstale un navegador web como Google Chrome y vuelva a intentarlo.</string>
+    <string name="browser_not_found">Navegador no encontrado</string>
+
+</resources>

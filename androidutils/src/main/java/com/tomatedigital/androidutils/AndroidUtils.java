@@ -4,6 +4,7 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -24,6 +25,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
 import android.os.Process;
+import android.provider.Settings;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -68,7 +70,7 @@ public class AndroidUtils {
 
     }
 
-    private static String piratAppInstalled(@NonNull final Context c) {
+    protected static String piratAppInstalled(@NonNull final Context c) {
         PackageManager pm = c.getPackageManager();
         for (ApplicationInfo ai : pm.getInstalledApplications(PackageManager.GET_META_DATA))
             if (PIRAT_APPS.contains(ai.packageName))
@@ -321,17 +323,18 @@ public class AndroidUtils {
     }
 
     public static void openBrowser(@NonNull String page, @NonNull Context activity) {
-        if (!page.startsWith("http"))
-            page = "http://" + page;
+
         Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse(page));
 
-        openBrowser.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY |
-                Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+        openBrowser.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
             openBrowser.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 
-        activity.startActivity(openBrowser);
+        if (openBrowser.resolveActivity(activity.getPackageManager()) != null)
+            activity.startActivity(openBrowser);
+        else
+            new AlertDialog.Builder(activity).setTitle(R.string.browser_not_found).setMessage(R.string.browser_not_found_message).setPositiveButton(R.string.close, null).show();
 
     }
 
@@ -399,6 +402,8 @@ public class AndroidUtils {
 
         HttpsURLConnection conn = (HttpsURLConnection) new URL("https://api64.ipify.org").openConnection();
         conn.getResponseCode();
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
         byte[] buffer = new byte[256];
         int lenght;
         while ((lenght = conn.getInputStream().read(buffer)) > 0)
@@ -411,6 +416,9 @@ public class AndroidUtils {
     @WorkerThread
     public static boolean isGoogleUsing(@NonNull final Context c) {
 
+
+        if ("true".equals(Settings.System.getString(c.getContentResolver(), "firebase.test.lab")))
+            return true;
 
         for (Account acc : ((AccountManager) c.getSystemService(ACCOUNT_SERVICE)).getAccounts()) {
             if (acc.name.toLowerCase().endsWith("@cloudtestlabaccounts.com"))

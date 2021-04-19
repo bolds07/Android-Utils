@@ -121,6 +121,13 @@ public class AndroidUtils {
         clipboard.setPrimaryClip(clip);
     }
 
+    public static boolean isNetworkOn(@NonNull Context context) {
+        ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
     public static boolean canTouch(@Nullable final OkHttpClient client, @NonNull final String url) {
 
         if (okHttpClient == null || client != null)

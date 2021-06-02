@@ -1,7 +1,5 @@
 package com.tomatedigital.androidutils;
 
-import android.os.AsyncTask;
-
 import androidx.annotation.NonNull;
 
 
@@ -10,8 +8,6 @@ import com.tomatedigital.utils.general.ThreadPoolExpandableExecutor;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;

@@ -41,7 +41,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -312,14 +311,18 @@ public class AndroidUtils {
 
     public static boolean isOfficialInstaller(@NonNull final Context context) {
         // A list with valid installers package name
-        Set<String> validInstallers = new HashSet<>(Arrays.asList("com.amazon.venezia", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.android.vending", "com.google.android.feedback"));
+
+        //com.sec.android.easyMover samsung's app to move apk to sdk card
+        //com.google.android.apps.nbu.files google's app to move apk to sd card
+        //com.xiaomi.mipicks store for xiaomi phones
+        Set<String> validInstallers = new HashSet<>(Arrays.asList("com.xiaomi.mipicks", "com.google.android.apps.nbu.files", "com.samsung.android.scloud", "com.sec.android.easyMover", "com.amazon.venezia", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.android.vending", "com.google.android.feedback"));
 
         // The package name of the app that has installed your app
         final String installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
 
         if (!validInstallers.contains(installer) && !BuildConfig.DEBUG) {
             Bundle b = new Bundle();
-            b.putString("installer", installer == null ? "null" : installer);
+            b.putString("pirat_installer", installer == null ? "null" : installer);
             FirebaseAnalytics.getInstance(context).logEvent("pirat_install", b);
         }
 
@@ -338,7 +341,7 @@ public class AndroidUtils {
 
         openBrowser.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+
             openBrowser.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 
         if (openBrowser.resolveActivity(activity.getPackageManager()) != null)
@@ -465,11 +468,10 @@ public class AndroidUtils {
                 (i & 0xFF);
     }
 
-    public static   int getProcessorCoresCount() {
-        if(Build.VERSION.SDK_INT >= 17) {
+    public static int getProcessorCoresCount() {
+        if (Build.VERSION.SDK_INT >= 17) {
             return Runtime.getRuntime().availableProcessors();
-        }
-        else {
+        } else {
             // Use saurabh64's answer
             return getNumCoresOldPhones();
         }
@@ -478,6 +480,7 @@ public class AndroidUtils {
     /**
      * Gets the number of cores available in this device, across all processors.
      * Requires: Ability to peruse the filesystem at "/sys/devices/system/cpu"
+     *
      * @return The number of cores, or 1 if failed to get result
      */
     private static int getNumCoresOldPhones() {
@@ -486,10 +489,7 @@ public class AndroidUtils {
             @Override
             public boolean accept(File pathname) {
                 //Check if filename is "cpu", followed by a single digit number
-                if(Pattern  .matches("cpu[0-9]+", pathname.getName())) {
-                    return true;
-                }
-                return false;
+                return Pattern.matches("cpu[0-9]+", pathname.getName());
             }
         }
 
@@ -500,7 +500,7 @@ public class AndroidUtils {
             File[] files = dir.listFiles(new CpuFilter());
             //Return the number of cores (virtual CPU devices)
             return files.length;
-        } catch(Exception e) {
+        } catch (Exception e) {
             //Default to return 1 core
             return 1;
         }

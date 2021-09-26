@@ -5,7 +5,7 @@ import androidx.annotation.NonNull;
 
 import com.tomatedigital.utils.general.ThreadPoolExpandableExecutor;
 
-import org.jetbrains.annotations.NotNull;
+
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadFactory;
@@ -46,7 +46,7 @@ public class ThreadPool {
             }
 
             @Override
-            public Thread newThread(@NotNull Runnable r) {
+            public Thread newThread(@NonNull Runnable r) {
                 Thread t = new Thread(group, r,
                         prefix + "-" + threadNumber.getAndIncrement(),
                         0);

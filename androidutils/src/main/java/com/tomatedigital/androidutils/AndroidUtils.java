@@ -1,5 +1,8 @@
 package com.tomatedigital.androidutils;
 
+import static android.content.Context.ACCOUNT_SERVICE;
+import static android.content.Context.POWER_SERVICE;
+
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
@@ -10,95 +13,59 @@ import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.net.wifi.WifiManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Looper;
 import android.os.PowerManager;
-import android.os.Process;
 import android.provider.Settings;
+import android.util.DisplayMetrics;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
-
-import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
-import static android.content.Context.ACCOUNT_SERVICE;
-import static android.content.Context.POWER_SERVICE;
-
 public class AndroidUtils {
 
-
-    private static OkHttpClient okHttpClient;
-    public static final String REGEX_EMAIL = "[a-z0-9._-]+@[a-z0-9_-]+(\\.[a-z]+)(\\.[a-z]+)?";
     public static final String REGEX_LETTER_NUMBER_ONLY = "[^a-zA-Z0-9 ]";
 
 
-    private static final Set<String> PIRAT_APPS = new HashSet<>(Arrays.asList("com.chelpus.lackypatch", "com.dimonvideo.luckypatcher", "com.forpda.lp", "com.android.vending.billing.InAppBillingService", "com.android.vending.billing.InAppBillingSorvice", "com.android.vendinc", "uret.jasi2169.patcher", "zone.jasi2169.uretpatcher", "p.jasi2169.al3", "cc.madkite.freedom", "cc.cz.madkite.freedom", "org.creeplays.hack", /*"com.happymod.apk",*/ "org.sbtools.gamehack", "com.zune.gamekiller", "com.aag.killer", "com.killerapp.gamekiller", "cn.lm.sq", "net.schwarzis.game_cih", "com.baseappfull.fwd", "com.github.oneminusone.disablecontentguard", "com.oneminusone.disablecontentguard"));
-
-
-    public static boolean isValidEmail(@Nullable String email) {
-
-        return email != null && !email.contains("not-applicable") && !email.contains("blackhole-") && !email.trim().equals("") && !email.contains("@devnull") && email.trim().toLowerCase().matches(REGEX_EMAIL);
-
+    /**
+     * This method converts dp unit to equivalent pixels, depending on device density.
+     *
+     * @param dp      A value in dp (density independent pixels) unit. Which we need to convert into pixels
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent px equivalent to dp depending on device density
+     */
+    public static float convertDpToPixel(final float dp, @NonNull final Context context) {
+        return dp * ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
 
-    protected static String piratAppInstalled(@NonNull final Context c) {
-        PackageManager pm = c.getPackageManager();
-        for (ApplicationInfo ai : pm.getInstalledApplications(PackageManager.GET_META_DATA))
-            if (PIRAT_APPS.contains(ai.packageName))
-                return ai.packageName;
-        for (String p : PIRAT_APPS) {
-            Intent i = pm.getLaunchIntentForPackage(p);
-            if (i != null && !pm.queryIntentActivities(i, PackageManager.MATCH_DEFAULT_ONLY).isEmpty())
-                return p;
-        }
-
-
-        return null;
+    /**
+     * This method converts device specific pixels to density independent pixels.
+     *
+     * @param px      A value in px (pixels) unit. Which we need to convert into db
+     * @param context Context to get resources and device specific display metrics
+     * @return A float value to represent dp equivalent to px value
+     */
+    public static float convertPixelsToDp(final float px, @NonNull final Context context) {
+        return px / ((float) context.getResources().getDisplayMetrics().densityDpi / DisplayMetrics.DENSITY_DEFAULT);
     }
-
-    public static boolean hasPiratAppInstalled(@NonNull final Context c) {
-        String pirat = piratAppInstalled(c);
-        if (pirat != null) {
-            Bundle b = new Bundle();
-            b.putString("app", pirat);
-            FirebaseAnalytics.getInstance(c).logEvent("pirat_app_installed", b);
-        }
-
-
-        return pirat != null;
-    }
-
 
     public static boolean isAppOnForeground(@NonNull final Context context) {
         ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
@@ -119,7 +86,7 @@ public class AndroidUtils {
     public static void copyToClipboard(@NonNull final Context c, @NonNull final String text, @NonNull final String label) {
         ClipboardManager clipboard = (ClipboardManager) c.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText(label, text);
-        //noinspection ConstantConditions
+
         clipboard.setPrimaryClip(clip);
     }
 
@@ -130,28 +97,7 @@ public class AndroidUtils {
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    public static boolean canTouch(@Nullable final OkHttpClient client, @NonNull final String url) {
 
-        if (okHttpClient == null || client != null)
-            okHttpClient = client;
-
-        if (okHttpClient != null) {
-            try {
-                Response resp = okHttpClient.newCall(new Request.Builder().get().url(url).build()).execute();
-
-                if (resp.body() != null)
-                    resp.close();
-
-                return true;
-            } catch (Exception e) {
-                return false;
-            }
-        }
-        return false;
-    }
-
-
-    @SuppressWarnings("ConstantConditions")
     public static PowerManager.WakeLock acquireWakeLock(@NonNull final Context c, final long timeout, @NonNull final String tag) {
 
 
@@ -165,172 +111,6 @@ public class AndroidUtils {
     }
 
 
-    public static boolean isBeingCloned(@NonNull Context c) {
-        ActivityManager am = (ActivityManager) c.getSystemService(Context.ACTIVITY_SERVICE);
-        int myPid = Process.myPid();
-        int myUid = Process.myUid();
-        //noinspection ConstantConditions
-        List<ActivityManager.RunningAppProcessInfo> processess = am.getRunningAppProcesses();
-
-
-        if (processess == null)
-            return true;
-
-        String path = c.getFilesDir().getAbsolutePath().toLowerCase();
-        String[] forbiddenPaths = {"felix.jyelves", "multi", "duel", "paralelo", "whatswebnolastseen", "mobiorca.whatsaccount", "duplicator", "trendmicro.tmas", "ludashi.superboost", "jumobile.smartapp", "hide", "paralel", "parallel", "dual", "clone"};
-        for (String forbid : forbiddenPaths)
-            if (path.contains(forbid))
-                return true;
-
-        try {
-            ApplicationInfo appinfo = c.getPackageManager().getApplicationInfo(c.getApplicationContext().getPackageName(), 0);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N && !appinfo.dataDir.replace("user_de", "user").equals(appinfo.deviceProtectedDataDir.replace("user_de", "user")))
-                return true;
-        } catch (PackageManager.NameNotFoundException ignore) {
-        }
-
-        for (ActivityManager.RunningAppProcessInfo info : processess)
-            if (info.uid == myUid && info.pid != myPid)
-                return true;
-
-
-        return false;
-    }
-
-    public static boolean checkXposed(@NonNull Context c) {
-        return isXposedActive() || isXposedInstallerAvailable(c);
-    }
-
-
-    /**
-     * Check if the Xposed framework is installed and active.
-     *
-     * @return {@code true} if Xposed is active on the device.
-     */
-    private static boolean isXposedActive() {
-        StackTraceElement[] stackTraces = new Throwable().getStackTrace();
-        for (StackTraceElement stackTrace : stackTraces) {
-            final String clazzName = stackTrace.getClassName();
-            if (clazzName != null && clazzName.contains("de.robv.android.xposed.XposedBridge")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * Check if the Xposed installer is installed and enabled on the device.
-     *
-     * @param context The application context
-     * @return {@code true} if the package "de.robv.android.xposed.installer" is installed and enabled.
-     */
-    private static boolean isXposedInstallerAvailable(Context context) {
-        try {
-            return context.getPackageManager().getApplicationInfo("de.robv.android.xposed.installer", 0).enabled;
-        } catch (PackageManager.NameNotFoundException ignored) {
-        }
-        return false;
-    }
-
-    @SuppressLint("HardwareIds")
-    public static boolean isEmulator(@NonNull final Context c) {
-
-
-        Field[] tmp = Sensor.class.getDeclaredFields();
-        Set<Field> fields = new HashSet<>();
-        for (Field f : tmp)
-            if (!Modifier.isStatic(f.getModifiers()) && f.getType() == String.class) {
-                f.setAccessible(true);
-                fields.add(f);
-            }
-
-        for (Sensor s : ((SensorManager) c.getSystemService(Context.SENSOR_SERVICE)).getSensorList(Sensor.TYPE_ALL)) {
-            for (Field f : fields) {
-                try {
-                    String vendor = (String) f.get(s);
-                    if (vendor != null) {
-                        vendor = vendor.toLowerCase();
-                        if (vendor.contains("bluestacks") || vendor.contains("tiantianvm") || vendor.contains("genymotion") || vendor.contains("goldfish") || vendor.contains("ttvm_hdragon") || vendor.contains("vbox"))
-                            return true;
-                    }
-                } catch (IllegalAccessException ignore) {
-
-                }
-            }
-        }
-
-
-        final String manufacturer = Build.MANUFACTURER.toLowerCase();
-        final String model = Build.MODEL.toLowerCase();
-        final String hardware = Build.HARDWARE.toLowerCase();
-        final String product = Build.PRODUCT.toLowerCase();
-        final String brand = Build.BRAND.toLowerCase();
-        final String fingerprint = Build.FINGERPRINT.toLowerCase();
-        return
-                model.contains("google_sdk")
-                        || model.contains("droid4x")
-                        || model.contains("emulator")
-                        || model.contains("android sdk built for x86")
-                        || model.equals("sdk")
-                        || model.contains("tiantianvm")
-                        || model.contains("andy")
-                        || model.contains(" android sdk built for x86_64")
-                        || manufacturer.contains("unknown")
-                        || manufacturer.contains("genymotion")
-                        || manufacturer.contains("andy")
-                        || manufacturer.contains("mit")
-                        || manufacturer.contains("tiantianvm")
-                        || hardware.contains("goldfish")
-                        || hardware.contains("vbox86")
-                        || hardware.contains("nox")
-                        || hardware.contains("ttvm_x86")
-                        || product.contains("sdk")
-                        || product.contains("andy")
-                        || product.contains("ttvm_hdragon")
-                        || product.contains("droid4x")
-                        || product.contains("nox")
-                        || product.contains("vbox86p")
-
-                        || Build.BOARD.toLowerCase().contains("nox")
-                        || Build.BOOTLOADER.toLowerCase().contains("nox")
-
-
-                        || Build.SERIAL.toLowerCase().contains("nox")
-                        || brand.contains("unknown")
-                        || brand.contains("genymotion")
-                        || brand.contains("andy")
-                        || brand.contains("nox")
-                        || brand.contains("mit")
-                        || brand.contains("tiantianvm")
-                        || Build.FINGERPRINT.startsWith("unknown")
-                        || fingerprint.contains("generic")
-                        || fingerprint.contains("andy")
-                        || fingerprint.contains("ttvm_hdragon")
-                        || fingerprint.contains("vbox86p");
-    }
-
-    public static boolean isOfficialInstaller(@NonNull final Context context) {
-        // A list with valid installers package name
-
-        //com.sec.android.easyMover samsung's app to move apk to sdk card
-        //com.google.android.apps.nbu.files google's app to move apk to sd card
-        //com.xiaomi.mipicks store for xiaomi phones
-        Set<String> validInstallers = new HashSet<>(Arrays.asList("com.xiaomi.mipicks", "com.google.android.apps.nbu.files", "com.samsung.android.scloud", "com.sec.android.easyMover", "com.amazon.venezia", "com.sec.android.app.samsungapps", "com.huawei.appmarket", "com.android.vending", "com.google.android.feedback"));
-
-        // The package name of the app that has installed your app
-        final String installer = context.getPackageManager().getInstallerPackageName(context.getPackageName());
-
-        if (!validInstallers.contains(installer) && !BuildConfig.DEBUG) {
-            Bundle b = new Bundle();
-            b.putString("pirat_installer", installer == null ? "null" : installer);
-            FirebaseAnalytics.getInstance(context).logEvent("pirat_install", b);
-        }
-
-
-        // true if your app has been downloaded from Play Store
-        return validInstallers.contains(installer);
-    }
-
     public static boolean isMainThread() {
         return Looper.myLooper() == Looper.getMainLooper();
     }
@@ -340,9 +120,7 @@ public class AndroidUtils {
         Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse(page));
 
         openBrowser.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
-
-
-            openBrowser.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
+        openBrowser.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 
         if (openBrowser.resolveActivity(activity.getPackageManager()) != null)
             activity.startActivity(openBrowser);
@@ -466,44 +244,6 @@ public class AndroidUtils {
                 ((i >> 16) & 0xFF) + "." +
                 ((i >> 8) & 0xFF) + "." +
                 (i & 0xFF);
-    }
-
-    public static int getProcessorCoresCount() {
-        if (Build.VERSION.SDK_INT >= 17) {
-            return Runtime.getRuntime().availableProcessors();
-        } else {
-            // Use saurabh64's answer
-            return getNumCoresOldPhones();
-        }
-    }
-
-    /**
-     * Gets the number of cores available in this device, across all processors.
-     * Requires: Ability to peruse the filesystem at "/sys/devices/system/cpu"
-     *
-     * @return The number of cores, or 1 if failed to get result
-     */
-    private static int getNumCoresOldPhones() {
-        //Private Class to display only CPU devices in the directory listing
-        class CpuFilter implements FileFilter {
-            @Override
-            public boolean accept(File pathname) {
-                //Check if filename is "cpu", followed by a single digit number
-                return Pattern.matches("cpu[0-9]+", pathname.getName());
-            }
-        }
-
-        try {
-            //Get directory containing CPU info
-            File dir = new File("/sys/devices/system/cpu/");
-            //Filter to only list the devices we care about
-            File[] files = dir.listFiles(new CpuFilter());
-            //Return the number of cores (virtual CPU devices)
-            return files.length;
-        } catch (Exception e) {
-            //Default to return 1 core
-            return 1;
-        }
     }
 
 

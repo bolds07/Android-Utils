@@ -1,10 +1,10 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 30
     defaultConfig {
         minSdkVersion 16
-        targetSdkVersion 31
+        targetSdkVersion 30
 
 
     }
@@ -21,6 +21,9 @@ android {
 
         }
         debug {
+
+
+
             minifyEnabled false
             shrinkResources false
             //useProguard false
@@ -34,9 +37,10 @@ dependencies {
 
     api "com.google.firebase:firebase-analytics:19.0.1"
     api 'androidx.annotation:annotation:1.2.0'
-
+    api 'androidx.appcompat:appcompat:1.3.1'
 
 
     //noinspection GradlePath,GradlePath
     api files('D:/Desenv/maven/repo/com/tomatedigital/utils/1.10.0/utils-1.10.0.jar')
+    api 'com.google.android.gms:play-services-location:18.0.0'
 }

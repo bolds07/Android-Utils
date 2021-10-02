@@ -4,4 +4,7 @@
 
     <string name="browser_not_found_message">Your phone hasn\'t any browser capable of showing this page.\nPlease install a web browser such as Google Chrome and try again.</string>
     <string name="browser_not_found">Browser not found</string>
+    <string name="permission_required">Permission Required</string>
+    <string name="go_to_settings">Go to Settings</string>
+    <string name="default_request_permission_message">You must grant permission to the app before continue</string>
 </resources>

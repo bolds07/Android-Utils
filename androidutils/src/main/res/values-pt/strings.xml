@@ -3,5 +3,8 @@
     <string name="close">Fechar</string>
     <string name="browser_not_found_message">Seu celular não tem nenhum navegador capaz de exibir esta página.\nPor favor, instale um navegador web como por exemplo Google Chrome e tente novamente.</string>
     <string name="browser_not_found">Navegador não encontrado</string>
+    <string name="permission_required">Permissão Necessária</string>
+    <string name="go_to_settings">Abrir Configurações</string>
+    <string name="default_request_permission_message">Antes de continuar, é necessário que você conceda permissões ao aplicativo</string>
 
 </resources>

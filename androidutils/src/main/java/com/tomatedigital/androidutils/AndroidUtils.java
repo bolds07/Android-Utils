@@ -6,6 +6,7 @@ import static android.content.Context.POWER_SERVICE;
 import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ActivityManager;
 import android.app.AlertDialog;
 import android.content.ClipData;
@@ -13,6 +14,7 @@ import android.content.ClipboardManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
@@ -30,6 +32,8 @@ import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.net.URL;
@@ -43,7 +47,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class AndroidUtils {
 
     public static final String REGEX_LETTER_NUMBER_ONLY = "[^a-zA-Z0-9 ]";
-
+    private static AlertDialog permissionDialog;
 
     /**
      * This method converts dp unit to equivalent pixels, depending on device density.
@@ -237,6 +241,9 @@ public class AndroidUtils {
 
         return false;
     }
+
+
+
 
     private static String intToIp(int i) {
 

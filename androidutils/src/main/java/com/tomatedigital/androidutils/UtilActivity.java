@@ -15,8 +15,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.google.firebase.analytics.FirebaseAnalytics;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;

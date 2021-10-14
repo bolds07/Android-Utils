@@ -2,9 +2,11 @@ package com.tomatedigital.androidutils;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.provider.Settings;
 
 import androidx.annotation.NonNull;
 
@@ -14,10 +16,23 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 public class AndroidHardwareUtils {
 
+
+    @SuppressLint("HardwareIds")
+    public static String getUniqueDeviceUUID(@NonNull Context context) {
+
+        final SharedPreferences sp = context.getSharedPreferences(Constants.DefaultSharedPreferences.PREFERENCES_FILE, Context.MODE_PRIVATE);
+        String uuid = sp.getString(Constants.DefaultSharedPreferences.DEVICE_UUID, null);
+        if (uuid == null) {
+            uuid = UUID.nameUUIDFromBytes(Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID).getBytes()).toString();
+            sp.edit().putString(Constants.DefaultSharedPreferences.DEVICE_UUID, uuid).apply();
+        }
+        return uuid;
+    }
 
     public static int getProcessorCoresCount() {
         if (Build.VERSION.SDK_INT >= 17) {

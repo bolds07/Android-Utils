@@ -1,5 +1,6 @@
 package com.tomatedigital.androidutils;
 
+
 import static android.content.Context.ACCOUNT_SERVICE;
 import static android.content.Context.POWER_SERVICE;
 
@@ -7,7 +8,6 @@ import android.accounts.Account;
 import android.accounts.AccountManager;
 import android.annotation.SuppressLint;
 import android.app.ActivityManager;
-import android.app.AlertDialog;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentResolver;
@@ -16,6 +16,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.database.Cursor;
+import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -39,7 +40,7 @@ import javax.net.ssl.HttpsURLConnection;
 public class AndroidUtils {
 
     public static final String REGEX_LETTER_NUMBER_ONLY = "[^a-zA-Z0-9 ]";
-    private static AlertDialog permissionDialog;
+
 
     /**
      * This method converts dp unit to equivalent pixels, depending on device density.
@@ -64,8 +65,8 @@ public class AndroidUtils {
     }
 
     public static boolean isAppOnForeground(@NonNull final Context context) {
-        ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-        List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
+        final ActivityManager activityManager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        final List<ActivityManager.RunningAppProcessInfo> appProcesses = activityManager.getRunningAppProcesses();
         if (appProcesses == null)
             return false;
 
@@ -90,7 +91,14 @@ public class AndroidUtils {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
 
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnectedOrConnecting();
+    }
+
+    public static boolean isGPSOn(@NonNull Context context) {
+        List<String> providers = ((LocationManager) context.getSystemService(Context.LOCATION_SERVICE)).getProviders(true);
+        providers.remove(LocationManager.PASSIVE_PROVIDER);
+
+        return !providers.isEmpty();
     }
 
 
@@ -111,17 +119,17 @@ public class AndroidUtils {
         return Looper.myLooper() == Looper.getMainLooper();
     }
 
-    public static void openBrowser(@NonNull String page, @NonNull Context activity) {
+    public static void openBrowser(@NonNull String page, @NonNull Context context) {
 
         Intent openBrowser = new Intent(Intent.ACTION_VIEW, Uri.parse(page));
 
         openBrowser.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
         openBrowser.addFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);
 
-        if (openBrowser.resolveActivity(activity.getPackageManager()) != null)
-            activity.startActivity(openBrowser);
+        if (openBrowser.resolveActivity(context.getPackageManager()) != null)
+            context.startActivity(openBrowser);
         else
-            new AlertDialog.Builder(activity).setTitle(R.string.browser_not_found).setMessage(R.string.browser_not_found_message).setPositiveButton(R.string.close, null).show();
+            new androidx.appcompat.app.AlertDialog.Builder(context).setTitle(R.string.browser_not_found).setMessage(R.string.browser_not_found_message).setPositiveButton(R.string.close, null).show();
 
     }
 
@@ -187,7 +195,7 @@ public class AndroidUtils {
     public static String getIpAddress() throws IOException {
         StringBuilder ip = new StringBuilder();
 
-        HttpsURLConnection conn = (HttpsURLConnection) new URL("https://api64.ipify.org").openConnection();
+        HttpsURLConnection conn = (HttpsURLConnection) new URL("https://api.ipify.org").openConnection();
         conn.getResponseCode();
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
@@ -233,8 +241,6 @@ public class AndroidUtils {
 
         return false;
     }
-
-
 
 
     private static String intToIp(int i) {

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="com_facebook_blue">#1877F2</color>
+    <color name="com_facebook_primary_button_disabled_text_color">#BCC3C9</color>
+    <color name="com_facebook_primary_button_pressed_text_color">#DADDE2</color>
+    <color name="com_facebook_primary_button_text_color">#FFFFFF</color>
+</resources>

@@ -204,6 +204,8 @@ public class AndroidUtils {
         while ((lenght = conn.getInputStream().read(buffer)) > 0)
             ip.append(new String(buffer, 0, lenght));
 
+        conn.getInputStream().close();
+
         return ip.toString();
     }
 

@@ -81,7 +81,7 @@ public class FacebookLogin extends AppCompatActivity {
         final Uri data = intent.getData();
         final Map<String, String> params = new HashMap<>();
         final FacebookLoginCallback loginCallback = new DefaultFacebookLoginCallback(this.resultActivity, this.resultIntentTokenKey);
-        if (data != null) {
+        if (data != null && !isFinishing()) {
             String fragment = data.getEncodedFragment();
             if (fragment != null) {
                 //granted_scopes=email%2Cads_management%2Cpublic_profile&denied_scopes=&signed_request=dfnbo-qj35smA6der_6iXSPBT-ehvkb-v3PsIXCkYQ4.eyJ1c2VyX2lkIjoiMTAwMDczMTY5MTY0MTIwIiwiY29kZSI6IkFRQ1V2NXQ4NXhPR0NIRmNYbW41S1doc19LQXZJTjRuV3d0ejNoN0dhNUZyYVRvWDZLRS1jaFdIV2VWTy1aX05mZGdtaG5rd0dmYXM2Ylg1ajZyZUF6bHdsdmdGNEJLTUluSWUySnZXOTdCREJnd0dyUUs3eWYwckR6OW84dzNKVTFUUEdDNTYwZU1sLXRFeVd0amJ4OERoRnhoSmlsYXRrak93UDN2RkN3LU02OWdIZGZta0hxQVJicGJZOUJkMDRETzZ4d0FhYURYNk1kY0I5VTVoUFN1bkhSamJ1Sk9JNHZBVVFWOFNndnJuTFNHWTZOZ2VGbHBtLXVBZjcxVXNiRXE1XzFTZVRyMEFyMllhYVR5QTRtRFNHNExUdGVVQlhqOS1kMnJfRTZmcDk3Z2szbkppZllEbm5ZR1g2M1AwODhfOGpfdXdXRURlT0ZQVk42ZVVaa0FwdHRUMllndHptak45VTY5MXpRSU1DZTR3Mm91eTZiakxremotWWxVMElPdDNjdXFpVjhUejJOOGMzVGVkMlcybCIsImFsZ29yaXRobSI6IkhNQUMtU0hBMjU2IiwiaXNzdWVkX2F0IjoxNjM0MzMxNDMwfQ&graph_domain=facebook&access_token=EAABwzLixnjYBAO4uPpo88j4ZBSPUOOqC6WhFeER6cnuWSUBKrYfjU6ETwDACjrtYqRusc4M2j8cq5uHrRhUxjgkm6XEtclae4nHuxBGD6xseNveTQgqdzTCACqPpPZAQpJLeZCqJ9ArAyavMONM8ZCKlZAny7PZAkZARJHnQBCLz6mskyRvj5yPv9X0nMmIZCs1UDeu9LeDNnHYzseYH4ioZB5t65S0ZAM0a35R66ltLFOA9xZCzHvGjuDy6usEaeEleccZD&data_access_expiration_time=0&expires_in=0
@@ -120,7 +120,7 @@ public class FacebookLogin extends AppCompatActivity {
                 try {
                     this.resultActivity = (Class<? extends Activity>) Class.forName(className);
                 } catch (Exception e) {
-                    FirebaseCrashlytics.getInstance().log(e.getMessage());
+                    FirebaseCrashlytics.getInstance().recordException(e);
                 }
             }
             if (this.resultIntentTokenKey == null || this.resultActivity == null) {

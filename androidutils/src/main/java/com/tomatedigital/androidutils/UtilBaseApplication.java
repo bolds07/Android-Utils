@@ -62,7 +62,7 @@ public abstract class UtilBaseApplication extends MultiDexApplication {
         loadUpdates();
         initializeApp();
 
-        FirebaseCrashlytics.getInstance().setUserId(this.getId()); //DEVICE_ID is only set at initializeApp
+        FirebaseCrashlytics.getInstance().setCustomKey("device_id", AndroidHardwareUtils.getUniqueDeviceUUID(this)); //DEVICE_ID is only set at initializeApp
         FirebaseCrashlytics.getInstance().log("androidutils baseapplication initialized");
 
     }

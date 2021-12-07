@@ -23,10 +23,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class UtilBaseActivity extends AppCompatActivity {
+public abstract class UtilBaseActivity extends AppCompatActivity {
 
     final private Set<String> requestingPermissions = new HashSet<>();
     final private Map<Integer, String> permissionPendingAnswer = new HashMap<>();
+
 
     public CharSequence getText(int id, Object... args) {
         for (int i = 0; i < args.length; ++i)
